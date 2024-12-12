@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 import { aj } from "@/lib/arcjet";
 
 export async function GET(req: Request) {
-  const decision = await aj.protect(req, {
-    requested: 1,
-    email: "test@test.com",
-    "session.id": "user-123",
-  });
+  const decision = await aj.protect(req);
 
   console.log("Arcjet Decision:", decision);
 
@@ -33,12 +29,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const decision = await aj.protect(req, {
-    requested: 1,
-    email: "test@test.com",
-    // Add custom metadata for better tracking
-    "session.id": "user-123",
-  });
+  const decision = await aj.protect(req);
 
   if (decision.isDenied()) {
     return NextResponse.json(
