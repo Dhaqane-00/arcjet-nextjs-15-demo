@@ -1,138 +1,161 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const testScenarios = [
-  {
-    label: "Single Request",
-    description: "Make a single request to test basic functionality",
-    requests: 1,
-    delayMs: 0,
-  },
-  {
-    label: "Burst Requests",
-    description: "Make multiple requests quickly to trigger rate limiting",
-    requests: 10,
-    delayMs: 100,
-  },
-  {
-    label: "Spaced Requests",
-    description: "Make requests with delays to test token refill",
-    requests: 5,
-    delayMs: 2000,
-  },
-  {
-    label: "Overflow Test",
-    description: "Exceed the rate limit to see enforcement",
-    requests: 15,
-    delayMs: 200,
-  },
-];
+interface RequestResult {
+  timestamp: string;
+  duration: number;
+  status: number;
+  data?: {
+    message: string;
+    remainingTokens?: number;
+    resetTime?: string;
+  };
+  error?: string;
+}
 
 export default function RateLimitDemo() {
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<RequestResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeScenario, setActiveScenario] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<number>(10);
+  const [resetTime, setResetTime] = useState<Date | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string>("");
 
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+  useEffect(() => {
+    // Only start countdown if we're not at full capacity
+    if (tokens < 10 && resetTime) {
+      const countdownInterval = setInterval(() => {
+        const now = new Date();
+        const diff = resetTime.getTime() - now.getTime();
+
+        if (diff <= 0) {
+          // Time to refill tokens
+          setTokens((prev) => Math.min(prev + 5, 10));
+          if (tokens + 5 < 10) {
+            // If we're still not at capacity, set next reset time
+            setResetTime(new Date(now.getTime() + 10000));
+          } else {
+            // We're at or above capacity
+            setResetTime(null);
+            setTimeLeft("");
+          }
+        } else {
+          // Update countdown
+          const seconds = Math.ceil(diff / 1000);
+          setTimeLeft(`${seconds}s`);
+        }
+      }, 100); // More frequent updates for smoother countdown
+
+      return () => clearInterval(countdownInterval);
+    }
+  }, [tokens, resetTime]);
 
   const makeRequest = async () => {
+    setLoading(true);
     try {
       const startTime = Date.now();
       const res = await fetch("/api/arcjet/rate-limit");
       const data = await res.json();
       const endTime = Date.now();
 
-      return {
+      const result = {
         timestamp: new Date().toISOString(),
         duration: endTime - startTime,
         status: res.status,
         data,
       };
-    } catch (error) {
-      return {
-        timestamp: new Date().toISOString(),
-        error: "Request failed",
-      };
-    }
-  };
 
-  const runScenario = async (scenario: (typeof testScenarios)[0]) => {
-    setLoading(true);
-    setActiveScenario(scenario.label);
-    setRequests([]);
-
-    for (let i = 0; i < scenario.requests; i++) {
-      const result = await makeRequest();
-      setRequests((prev) => [...prev, result]);
-      if (scenario.delayMs > 0) {
-        await sleep(scenario.delayMs);
+      // Update tokens and reset time based on server response
+      if (data.remainingTokens !== undefined) {
+        setTokens(data.remainingTokens);
+        // Only set reset time if we're not at capacity
+        if (data.remainingTokens < 10 && data.resetTime) {
+          setResetTime(new Date(data.resetTime));
+        } else {
+          setResetTime(null);
+          setTimeLeft("");
+        }
       }
-    }
 
+      setRequests((prev) => [result, ...prev]);
+    } catch (error) {
+      const result = {
+        timestamp: new Date().toISOString(),
+        status: 500,
+        error: "Request failed",
+        duration: 0,
+      };
+      setRequests((prev) => [result, ...prev]);
+    }
     setLoading(false);
-    setActiveScenario(null);
   };
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
       <h1 className="text-3xl font-bold mb-6">Rate Limiting Demo</h1>
       <p className="mb-6 text-gray-600">
-        Test Arcjet's rate limiting capabilities with different request
-        patterns. The system uses a token bucket algorithm with a capacity of 10
-        tokens, refilling 5 tokens every 10 seconds.
+        Test Arcjet's rate limiting capabilities. The system uses a token bucket
+        algorithm with a capacity of 10 tokens, refilling 5 tokens every 10
+        seconds.
       </p>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {testScenarios.map((scenario) => (
-          <div key={scenario.label} className="border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">{scenario.label}</h3>
-            <p className="text-sm text-gray-600 mb-4">{scenario.description}</p>
-            <div className="text-sm text-gray-500 mb-4">
-              <div>Requests: {scenario.requests}</div>
-              <div>Delay: {scenario.delayMs}ms</div>
-            </div>
-            <button
-              onClick={() => runScenario(scenario)}
-              disabled={loading}
-              className={`w-full px-4 py-2 rounded ${
-                activeScenario === scenario.label
-                  ? "bg-blue-200 cursor-not-allowed"
-                  : loading
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
-              }`}
-            >
-              {activeScenario === scenario.label
-                ? "Running..."
-                : "Run Scenario"}
-            </button>
-          </div>
-        ))}
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          onClick={makeRequest}
+          disabled={loading}
+          className={`px-6 py-3 rounded ${
+            loading
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-500 hover:bg-blue-600 text-white"
+          }`}
+        >
+          {loading ? "Making Request..." : "Make Request"}
+        </button>
+
+        <div className="text-sm">
+          <span className="font-medium">Tokens remaining: </span>
+          <span className={tokens === 0 ? "text-red-500" : "text-green-500"}>
+            {tokens}
+          </span>
+        </div>
+
+        <div className="text-sm">
+          <span className="font-medium">Next token refill in: </span>
+          <span className="text-blue-500">
+            {tokens < 10 ? timeLeft : "Full"}
+          </span>
+        </div>
       </div>
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Request History</h2>
-        <div className="space-y-2">
+        <ul className="space-y-2">
           {requests.map((req, i) => (
-            <div
+            <li
               key={i}
-              className={`p-4 rounded ${
+              className={`p-4 rounded flex items-center justify-between ${
                 req.status === 429
                   ? "bg-red-50 border border-red-200"
-                  : "bg-green-50 border border-green-200"
+                  : req.status === 200
+                  ? "bg-green-50 border border-green-200"
+                  : "bg-yellow-50 border border-yellow-200"
               }`}
             >
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Request #{i + 1}</span>
-                <span>{req.duration}ms</span>
+              <div className="flex-1">
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm font-medium">
+                    Status: {req.status}
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    Duration: {req.duration}ms
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {req.data ? JSON.stringify(req.data) : req.error}
+                </div>
               </div>
-              <pre className="text-sm overflow-auto">
-                {JSON.stringify(req.data || req.error, null, 2)}
-              </pre>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
       <div className="mt-8 p-4 bg-gray-50 rounded">

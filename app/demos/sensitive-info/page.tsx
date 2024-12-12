@@ -4,42 +4,53 @@ import { useState } from "react";
 const testCases = {
   safe: [
     {
-      label: "Regular Text",
-      input: "This is a normal message without any sensitive information.",
-      description: "Standard text content",
-    },
-    {
       label: "Product Review",
-      input: "Great product, fast shipping! Would recommend to others.",
-      description: "Typical user review",
+      input:
+        "I absolutely love the wireless headphones I bought last week! The sound quality is amazing and battery life is great. Would definitely recommend to others.",
+      description: "Standard product review without PII",
     },
     {
-      label: "Public Information",
-      input: "Contact us at our store: 123 Main Street, Public Town",
-      description: "Business address (non-sensitive)",
+      label: "Support Query",
+      input:
+        "Having trouble connecting my device to Bluetooth. I've tried restarting it and following the manual but no luck. Can you help?",
+      description: "Technical support question without sensitive data",
+    },
+    {
+      label: "Order Status",
+      input:
+        "Hi, I placed an order last week for a blue t-shirt. Could you tell me when it will be shipped? Order #12345",
+      description: "Order inquiry with non-sensitive reference number",
     },
   ],
   sensitive: [
     {
-      label: "Credit Card",
-      input: "My card number is 4532-1234-5678-9012",
+      label: "Refund Request with Email",
+      input:
+        "I ordered a hat from your store and would like to request a refund. Please contact me at john.smith@gmail.com or call 555-0123-4567.",
+      description: "Contains email and phone number",
+    },
+    {
+      label: "Payment Issue",
+      input:
+        "I ordered a hat from your store and would like to request a refund. My credit card number is 4111111111111111 ",
       description: "Contains credit card number",
     },
     {
-      label: "Email Address",
-      input: "You can reach me at private.user@email.com",
-      description: "Contains email address",
+      label: "Technical Issue",
+      input:
+        "I can't connect to my home network. My IP is 192.168.1.1 and my router's MAC address is 00:1A:2B:3C:4D:5E",
+      description: "Contains IP address and MAC address",
     },
     {
-      label: "Phone Number",
-      input: "Call me at +1 (555) 123-4567",
+      label: "Account Update",
+      input: "Please update my account Phone number: +15559876543",
       description: "Contains phone number",
     },
     {
-      label: "Mixed PII",
+      label: "Mixed Support Request",
       input:
-        "Name: John Doe\nEmail: john@email.com\nPhone: 555-0123\nSSN: 123-45-6789",
-      description: "Multiple types of sensitive data",
+        "Having issues with my recent purchase on order #5431.\nContact: alice@example.com\nShipping: 123 Main St, Apt 4B\nCard: 4111-2222-3333-4444\nPhone: +1-555-123-4567",
+      description: "Mix of order info and sensitive data",
     },
   ],
 };
@@ -88,6 +99,43 @@ export default function SensitiveInfoDemo() {
         the pre-defined test cases or enter your own text.
       </p>
 
+      <div className="space-y-4 mb-8 p-4 bg-gray-50 rounded">
+        <h2 className="text-xl font-semibold">
+          Test for Sensitive Information
+        </h2>
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="w-full p-2 border rounded"
+          placeholder="Enter text to test for sensitive information..."
+          rows={4}
+        />
+        <button
+          onClick={testSensitiveInfo}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+        >
+          {loading ? "Testing..." : "Test Input"}
+        </button>
+      </div>
+
+      {result && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-2">Result:</h2>
+          <div
+            className={`p-4 rounded ${
+              result.error
+                ? "bg-red-50 border border-red-200"
+                : "bg-green-50 border border-green-200"
+            }`}
+          >
+            <pre className="overflow-auto">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </div>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         {/* Safe Content */}
         <div className="space-y-4">
@@ -131,41 +179,6 @@ export default function SensitiveInfoDemo() {
           </div>
         </div>
       </div>
-
-      <div className="space-y-4 mb-8">
-        <h2 className="text-xl font-semibold">Custom Input</h2>
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full p-2 border rounded"
-          placeholder="Enter text to test for sensitive information..."
-          rows={4}
-        />
-        <button
-          onClick={testSensitiveInfo}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {loading ? "Testing..." : "Test Input"}
-        </button>
-      </div>
-
-      {result && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2">Result:</h2>
-          <div
-            className={`p-4 rounded ${
-              result.error
-                ? "bg-red-50 border border-red-200"
-                : "bg-green-50 border border-green-200"
-            }`}
-          >
-            <pre className="overflow-auto">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
 
       <div className="mt-8 p-4 bg-gray-50 rounded">
         <h2 className="text-lg font-semibold mb-2">

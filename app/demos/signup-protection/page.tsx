@@ -13,11 +13,6 @@ const testCases = {
       email: "contact@company.com",
       description: "Corporate email address",
     },
-    {
-      label: "Valid Custom Domain",
-      email: "john@mydomain.org",
-      description: "Email with custom domain",
-    },
   ],
   invalid: [
     {
@@ -34,11 +29,6 @@ const testCases = {
       label: "Missing MX Records",
       email: "user@nonexistent-domain.com",
       description: "Domain without mail server",
-    },
-    {
-      label: "Known Spam Domain",
-      email: "user@spam-domain.xyz",
-      description: "Domain associated with spam",
     },
   ],
 };
@@ -112,6 +102,58 @@ export default function SignupProtectionDemo() {
         request patterns.
       </p>
 
+      <div className="space-y-4 mb-8 p-4 bg-gray-50 rounded">
+        <h2 className="text-xl font-semibold">Test an Email Address</h2>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 border rounded"
+            placeholder="Enter email to test..."
+          />
+        </div>
+        <div className="flex gap-4">
+          <button
+            onClick={testSignup}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+          >
+            {loading ? "Testing..." : "Test Signup"}
+          </button>
+          <button
+            onClick={rapidTest}
+            disabled={loading}
+            className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:bg-gray-400"
+          >
+            Test Rate Limit
+          </button>
+        </div>
+        <p className="text-sm text-gray-500">
+          Request count: {requestCount} (Rate limit: 5 per 10 seconds)
+        </p>
+      </div>
+
+      {result && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-2">Result:</h2>
+          <div
+            className={`p-4 rounded ${
+              result.error
+                ? "bg-red-50 border border-red-200"
+                : "bg-green-50 border border-green-200"
+            }`}
+          >
+            <pre className="overflow-auto">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </div>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         {/* Valid Emails */}
         <div className="space-y-4">
@@ -153,58 +195,6 @@ export default function SignupProtectionDemo() {
           </div>
         </div>
       </div>
-
-      <div className="space-y-4 mb-8">
-        <h2 className="text-xl font-semibold">Custom Test</h2>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email Address
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded"
-            placeholder="Enter email to test..."
-          />
-        </div>
-        <div className="flex gap-4">
-          <button
-            onClick={testSignup}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-          >
-            {loading ? "Testing..." : "Test Signup"}
-          </button>
-          <button
-            onClick={rapidTest}
-            disabled={loading}
-            className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:bg-gray-400"
-          >
-            Test Rate Limit
-          </button>
-        </div>
-        <p className="text-sm text-gray-500">
-          Request count: {requestCount} (Rate limit: 5 per 10 minutes)
-        </p>
-      </div>
-
-      {result && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2">Result:</h2>
-          <div
-            className={`p-4 rounded ${
-              result.error
-                ? "bg-red-50 border border-red-200"
-                : "bg-green-50 border border-green-200"
-            }`}
-          >
-            <pre className="overflow-auto">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
 
       <div className="mt-8 p-4 bg-gray-50 rounded">
         <h2 className="text-lg font-semibold mb-2">Protection Features</h2>
