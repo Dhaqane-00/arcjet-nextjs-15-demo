@@ -64,6 +64,8 @@ export async function POST(request: Request) {
     // @ts-ignore
     const reset = result.reason.resetTime;
 
+    const country = result.ip.countryName ? result.ip.countryName : null;
+
     if (result.isDenied()) {
       return NextResponse.json(
         {
@@ -71,6 +73,7 @@ export async function POST(request: Request) {
           remainingTokens: Number(remaining) || 0,
           resetTime: reset,
           isLoggedIn,
+          country,
         },
         { status: 429 }
       );
@@ -81,6 +84,7 @@ export async function POST(request: Request) {
       remainingTokens: Number(remaining),
       resetTime: reset,
       isLoggedIn,
+      country,
     });
   } catch (error) {
     return NextResponse.json(

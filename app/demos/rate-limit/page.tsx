@@ -9,6 +9,7 @@ interface RequestResult {
     message: string;
     remainingTokens?: number;
     resetTime?: string;
+    country?: string;
   };
   error?: string;
 }
@@ -181,7 +182,10 @@ export default function RateLimitDemo() {
               }`}
             >
               <div className="flex justify-between mb-2">
-                <span className="font-medium">Status: {req.status}</span>
+                <span className="font-medium">
+                  Status: {req.status} 👋{" "}
+                  {req.data?.country || "Unknown Location"}
+                </span>
                 <span className="text-gray-600">
                   Duration: {req.duration}ms
                 </span>
