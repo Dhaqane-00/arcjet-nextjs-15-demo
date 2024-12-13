@@ -41,19 +41,42 @@ export default function Home() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Arcjet Security Demo</h1>
-        <p className="text-xl text-gray-600">
-          Explore different security features provided by Arcjet
-        </p>
-      </div>
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-5xl mx-auto py-16 px-4 sm:py-24 sm:px-6">
+        <div className="text-center space-y-4 mb-16">
+          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+            Arcjet Security Demo
+          </h1>
+          <p className="max-w-2xl mx-auto text-xl text-gray-500">
+            Explore different security features provided by Arcjet
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {demos.map((demo) => (
-          <DemoCard key={demo.title} {...demo} />
-        ))}
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-12">
+          {demos.map((demo) => (
+            <DemoCard key={demo.title} {...demo} />
+          ))}
+        </div>
+
+        <div className="text-center mt-16">
+          <p className="text-sm text-gray-400">
+            Demo from{" "}
+            <a
+              href="https://www.youtube.com/sonnysangha"
+              className="text-blue-500 hover:text-blue-600"
+            >
+              Sonny Sangha
+            </a>{" "}
+            with ❤️ from the{" "}
+            <a
+              href="https://www.papareact.com/course"
+              className="text-blue-500 hover:text-blue-600"
+            >
+              PAPAFAM (Join Zero To Full Stack Hero 2.0 & Learn to Code Today)
+            </a>
+          </p>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
